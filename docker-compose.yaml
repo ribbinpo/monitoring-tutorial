@@ -12,6 +12,20 @@ services:
       - ./prometheus:/etc/prometheus/
     networks:
       - monitoring
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: always
+    ports:
+      - 3000:3000
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/data:/var/lib/grafana
+    networks:
+      - monitoring
   node-service:
     container_name: node-service
     build:
