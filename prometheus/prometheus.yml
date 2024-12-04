@@ -17,4 +17,5 @@ scrape_configs:
     target_limit: 0
     static_configs:
       - targets:
-          - "node-service:4000"
+          # - "node-service:4000"
+          - "node-service:9464"

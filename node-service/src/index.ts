@@ -1,6 +1,11 @@
+import sdk from "./instrumentation";
+
 import express from "express";
 import "dotenv/config";
 import prometheus from "prom-client";
+import { trace } from '@opentelemetry/api';
+
+const tracer = trace.getTracer('node-service-tracer');
 
 const collectDefaultMetrics = prometheus.collectDefaultMetrics;
 const register = new prometheus.Registry();
@@ -31,6 +36,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/random/:time", (req, res) => {
+  const span = tracer.startSpan('node-service-span');
   const time = parseInt(req.params.time);
   let _evenCounter = 0;
   let _oddCounter = 0;
@@ -44,6 +50,7 @@ app.get("/random/:time", (req, res) => {
       _oddCounter++;
     }
   }
+  span.end();
   res.json({
     message: `Random number generated: ${time} \n Odd: ${_oddCounter} \n Even: ${_evenCounter}`,
   });
@@ -62,6 +69,11 @@ const server = app.listen(port, () => {
 
 const shutdown = () => {
   console.log("Received shutdown signal, closing server...");
+  sdk
+    .shutdown()
+    .then(() => console.log("OpenTelemetry shut down"))
+    .catch((err) => console.error("Error shutting down OpenTelemetry", err))
+    .finally(() => process.exit(0));
   server.close((err) => {
     if (err) {
       console.error("Error during shutdown:", err);
